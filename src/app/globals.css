@@ -1,0 +1,128 @@
+@import "tailwindcss";
+
+/* ---- Design tokens: calm editorial look, one confident accent ---- */
+:root {
+  --bg: #f7f4ee;
+  --surface: #fffdf9;
+  --surface-2: #f0ece3;
+  --ink: #1b1a17;
+  --ink-2: #5d5a52;
+  --line: #e2dccf;
+  --accent: #1f6f5c;
+  --accent-ink: #ffffff;
+  --accent-soft: #dcefe8;
+  --warn: #9a4505;
+  --warn-soft: #fdecd0;
+  --bad: #b42318;
+  --bad-soft: #fde4e1;
+  --paper-shadow: 0 1px 2px rgb(27 26 23 / 0.06), 0 12px 32px -8px rgb(27 26 23 / 0.18);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 120ms;
+  --dur: 220ms;
+  --dur-slow: 420ms;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14130f;
+    --surface: #1d1c17;
+    --surface-2: #26241e;
+    --ink: #f1eee6;
+    --ink-2: #aaa59a;
+    --line: #34312a;
+    --accent: #4fc3a1;
+    --accent-ink: #0c1f19;
+    --accent-soft: #17332b;
+    --warn: #f2a54a;
+    --warn-soft: #3a2a12;
+    --bad: #ff8a80;
+    --bad-soft: #3d1b18;
+    --paper-shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 12px 32px -8px rgb(0 0 0 / 0.6);
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-bad: var(--bad);
+  --color-bad-soft: var(--bad-soft);
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --shadow-paper: var(--paper-shadow);
+}
+
+html {
+  background: var(--bg);
+  color-scheme: light dark;
+}
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Reusable motion helpers */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+.rise { animation: rise var(--dur-slow) var(--ease-out) both; }
+
+/* iPhone Safari zooms the whole page when you focus a text field smaller than 16px, and often does not zoom back out.
+   On touch-sized screens every text field is 16px (the design uses 14px elsewhere, so this is the only place it changes). */
+@media (max-width: 767px), (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="hidden"]):not([type="file"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---- Print: output only the resume, at true size ---- */
+.print-only { display: none; }
+@media print {
+  html, body { background: #fff !important; }
+  .screen-only { display: none !important; }
+  .print-only { display: block; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+
+/* ---- Landing page demo: pure CSS (no JavaScript) ---- */
+@keyframes kw-glow {
+  0% { background: transparent; box-shadow: none; }
+  40%, 100% { background: var(--accent-soft); box-shadow: 0 0 0 3px var(--accent-soft); color: var(--accent); }
+}
+.kw { background: transparent; color: inherit; border-radius: 4px; padding: 0 2px; font-weight: 600;
+  animation: kw-glow 0.6s var(--ease-out) var(--d, 1s) both; }
+@keyframes flow { 0% { opacity: 0.2; transform: scaleY(0.3); } 100% { opacity: 1; transform: scaleY(1); } }
+.demo-flow { transform-origin: top; animation: flow 1.2s var(--ease-out) 1.2s both; }
+@keyframes chip-in { 0% { opacity: 0; transform: translateY(8px) scale(0.96); } 100% { opacity: 1; transform: none; } }
+@keyframes bob { 0%, 100% { translate: 0 0; } 50% { translate: 0 -4px; } }
+.chip-float { animation: chip-in 0.5s var(--ease-out) both, bob 5s ease-in-out 2.5s infinite; }
+details > summary::-webkit-details-marker { display: none; }

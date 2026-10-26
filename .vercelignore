@@ -1,0 +1,19 @@
+# Not needed to build or run the site: keeps uploads small and fast.
+e2e
+tests
+evals
+test-results
+supabase/tests
+scripts/db-check.mjs
+scripts/perf.mjs
+scripts/tex-check.mjs
+docs
+.next
+.next-test
+.live
+*.log
+
+# Secrets must never be uploaded with the source (they are set as environment variables instead).
+.env*
+*.pem
+dev-server.log
