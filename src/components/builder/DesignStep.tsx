@@ -14,6 +14,7 @@ import {
   type AccentId, type FontId, type SectionId, type TemplateConfig,
 } from "@/lib/templates";
 import { ResumePaper } from "../ResumePaper";
+import { SaveNudge } from "../account/SaveNudge";
 import { Button, Card, Chip } from "../ui";
 import { Row, Seg } from "./controls";
 import { LayoutEditor } from "./LayoutEditor";
@@ -322,6 +323,7 @@ export function DesignStep({ resume, config, setConfig, parts = ["templates", "s
         </div>
         {notice && <p role="alert" className="mt-3 text-sm text-bad">{notice}</p>}
         <p role="status" aria-live="polite" className={`mt-3 text-sm text-accent transition-opacity duration-[var(--dur)] ${done ? "opacity-100" : "opacity-0"}`}>{done ? `✓ ${done}` : " "}</p>
+        <SaveNudge kind="export" className="mt-3" />
         <p className="mt-3 text-xs text-ink-2">PDF opens your browser&apos;s print dialog. Choose &quot;Save as PDF&quot; and turn off headers and footers. The text stays selectable, which is what ATS parsers need.</p>
 
         <button onClick={() => setShowAts((s) => !s)} aria-expanded={showAts} className="mt-3 inline-flex min-h-10 items-center text-sm font-medium text-accent hover:underline">

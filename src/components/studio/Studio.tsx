@@ -13,6 +13,7 @@ import { ResumePaper } from "../ResumePaper";
 import { Button } from "../ui";
 import { JdStep } from "../builder/JdStep";
 import { AccountMenu } from "../account/AccountMenu";
+import { BrowserOnlyNote } from "../account/SaveNudge";
 import { ResumesDialog } from "./ResumesDialog";
 import { SectionsEditor } from "./SectionsEditor";
 
@@ -125,6 +126,7 @@ export function Studio() {
                 </Button>
               </div>
             )}
+            <BrowserOnlyNote className="mb-3" />
             <SectionsEditor resume={draft.resume} setResume={setResume} />
           </motion.aside>
 

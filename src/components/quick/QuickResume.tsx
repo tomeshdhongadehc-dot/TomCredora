@@ -17,6 +17,7 @@ import { useProfile } from "@/lib/use-profile";
 import { ResumePaper } from "../ResumePaper";
 import { Button, Card, Field, Textarea } from "../ui";
 import { AccountMenu } from "../account/AccountMenu";
+import { SaveNudge } from "../account/SaveNudge";
 import { SkillGapPanel } from "./SkillGapPanel";
 
 const skeleton = () => <div role="status" className="h-32 animate-pulse rounded-2xl bg-surface-2" aria-label="Loading" />;
@@ -221,6 +222,7 @@ export function QuickResume() {
         {/* result */}
         {draft.review && (
           <div ref={resultRef} className="rise space-y-5" aria-label="Your resume">
+            <SaveNudge kind="done" />
             <Card>
               <h2 className="font-display text-xl">Your resume{took !== null && <span className="ml-2 text-sm font-normal text-ink-2" role="status">ready in {took}s</span>}</h2>
               <div className="mt-4 rounded-xl bg-surface-2/60 p-3 sm:p-5">

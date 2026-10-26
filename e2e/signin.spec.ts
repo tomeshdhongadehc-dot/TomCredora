@@ -93,7 +93,7 @@ test.describe("waiting for the emailed link", () => {
     await toSent(page);
     await expect(page.getByRole("main")).toContainText("meera+link@example.com");
     await expect(page.getByRole("main")).toContainText("this device");
-    await expect(page.getByRole("main")).toContainText("spam");
+    await expect(page.getByRole("main")).toContainText("Spam or Promotions");
     await expect(page.getByRole("button", { name: /Account:/ })).toHaveCount(0);
     await expect(page.getByRole("heading", { level: 1 })).toBeFocused(); // keyboard and screen-reader users land on the new heading
   });

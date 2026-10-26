@@ -41,6 +41,13 @@ npx vercel deploy --prod
 npx vercel domains add tomcredora.com
 ```
 
+## Email sender (zero cost, no domain)
+- Create a Gmail account with `tomcredora` in the name, turn on 2-Step Verification, and make an App Password.
+- Supabase, Authentication, Emails, SMTP Settings: host `smtp.gmail.com`, port 465, the Gmail address as user, the app password as password, sender name `TomCredora`. Enter the app password only in the Supabase dashboard.
+- Supabase, Authentication, Email Templates, Magic Link: subject `Your TomCredora sign-in link`, and one clear button with the link. The sign-in page tells people the email comes from TomCredora and to check Spam or Promotions.
+- Gmail sends about 500 emails a day. Use a real domain with a transactional email service when that is not enough.
+- Google sign-in stays hidden until the provider is enabled in Supabase and `NEXT_PUBLIC_AUTH_GOOGLE=1` is set.
+
 ## 3. Before going public
 - [ ] Reset the database password if it was ever shared.
 - [ ] `npm run lint`, `npm test`, `npm run build`, `npm run perf`, `npm run db:check`.

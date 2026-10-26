@@ -1,4 +1,5 @@
 import type { Resume } from "@/lib/schema";
+import { announceExport } from "./events";
 
 const clean = (s: string) =>
   s
@@ -25,6 +26,7 @@ export function downloadBlob(name: string, blob: Blob) {
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+  announceExport();
 }
 
 export const downloadText = (name: string, text: string, type = "text/plain") =>
@@ -59,4 +61,5 @@ export function printAsPdf(fileBase: string) {
   };
   window.addEventListener("afterprint", restore);
   window.print();
+  announceExport();
 }

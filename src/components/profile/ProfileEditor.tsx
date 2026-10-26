@@ -13,6 +13,7 @@ import { loadWorkspace } from "@/lib/workspace";
 import { hasContent } from "@/lib/draft-model";
 import type { Resume } from "@/lib/schema";
 import { AccountMenu } from "../account/AccountMenu";
+import { SaveNudge } from "../account/SaveNudge";
 import { Button, Card } from "../ui";
 
 type Exp = Resume["experience"][number];
@@ -266,6 +267,8 @@ export function ProfileEditor() {
         <h1 className="font-display text-3xl">Your profile, filled once</h1>
         <p className="mt-1 text-ink-2">The details that never change. Every resume starts from this, and the AI adds the job-specific wording on a copy, so your profile stays exactly as you set it.</p>
       </div>
+
+      <SaveNudge kind="profile" when={ready && hasContent(profile.resume)} />
 
       <Card>
         <div className="flex flex-wrap items-center justify-between gap-3">

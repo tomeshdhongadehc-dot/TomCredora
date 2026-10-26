@@ -20,6 +20,21 @@ const BENEFITS = [
   { t: "Yours to delete", d: "One button removes everything we keep. Your name, email and phone are never sent to the AI." },
 ];
 
+const STEPS = ["Enter your email", "Open the email we send", "Click the link. Done"];
+const PILLS = ["Saved on any device", "Never lose your resumes", "Delete anytime"];
+const LAST_KEY = "arb.signin.last";
+
+/** A shortcut to the person's inbox, for the common providers. Everything else gets no button (we do not guess). */
+export function mailProvider(email: string): { name: string; href: string } | null {
+  const domain = email.split("@")[1]?.toLowerCase() ?? "";
+  if (domain === "gmail.com" || domain === "googlemail.com") return { name: "Gmail", href: "https://mail.google.com/" };
+  if (["outlook.com", "hotmail.com", "live.com", "msn.com"].includes(domain)) return { name: "Outlook", href: "https://outlook.live.com/mail/" };
+  if (/^yahoo\.|^ymail\.com$/.test(domain)) return { name: "Yahoo Mail", href: "https://mail.yahoo.com/" };
+  if (domain === "icloud.com" || domain === "me.com") return { name: "iCloud Mail", href: "https://www.icloud.com/mail" };
+  if (domain === "proton.me" || domain === "protonmail.com") return { name: "Proton Mail", href: "https://mail.proton.me/" };
+  return null;
+}
+
 const btn = "inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl px-5 text-base font-medium transition active:scale-[0.99] disabled:pointer-events-none disabled:opacity-50";
 const primary = `${btn} bg-accent text-accent-ink shadow-sm hover:brightness-110`;
 const secondary = `${btn} border border-line bg-surface hover:bg-surface-2`;
@@ -51,6 +66,7 @@ export function SignInPage() {
   const [next, setNext] = useState(DEFAULT_NEXT);
   const [hasNext, setHasNext] = useState(false);
   const [returning, setReturning] = useState(false);
+  const [last, setLast] = useState("");
   const heading = useRef<HTMLHeadingElement>(null);
   const emailBox = useRef<HTMLInputElement>(null);
 
@@ -68,6 +84,11 @@ export function SignInPage() {
     setNext(safeNext(chosen));
     setHasNext(!!chosen);
     setReturning(mayBeSignedIn());
+    try {
+      setLast(localStorage.getItem(LAST_KEY) ?? "");
+    } catch {
+      /* storage blocked: no shortcut */
+    }
     const problem = linkProblem();
     if (problem) setError(problem);
   }, []);
@@ -92,6 +113,24 @@ export function SignInPage() {
     return () => clearTimeout(id);
   }, [cooldown]);
 
+  // While waiting for the emailed link: if it is opened in another tab, this tab notices and carries on by itself.
+  useEffect(() => {
+    if (view !== "sent" || !auth) return;
+    let live = true;
+    const check = async () => {
+      if (live && (await auth.getSession())) await startSync();
+    };
+    const off = auth.onChange(check);
+    document.addEventListener("visibilitychange", check);
+    window.addEventListener("focus", check);
+    return () => {
+      live = false;
+      off();
+      document.removeEventListener("visibilitychange", check);
+      window.removeEventListener("focus", check);
+    };
+  }, [view, auth]);
+
   // keyboard and screen-reader users land on the new heading when the view changes
   useEffect(() => {
     heading.current?.focus();
@@ -107,10 +146,10 @@ export function SignInPage() {
     }
   };
 
-  async function submit(e?: FormEvent) {
+  async function submit(e?: FormEvent, address?: string) {
     e?.preventDefault();
     if (!auth || busy) return;
-    const value = email.trim().toLowerCase();
+    const value = (address ?? email).trim().toLowerCase();
     if (!EMAIL.test(value)) {
       setError(value ? "That does not look like an email address. Check it and try again." : "Enter your email address.");
       emailBox.current?.focus();
@@ -122,6 +161,11 @@ export function SignInPage() {
     const r = await auth.signInWithEmail(value);
     setBusy(false);
     if (!r.ok) return setError(r.error);
+    try {
+      localStorage.setItem(LAST_KEY, value);
+    } catch {
+      /* ignore */
+    }
     if (r.message) {
       setSentTo(value);
       setView("sent");
@@ -156,6 +200,8 @@ export function SignInPage() {
 
   const title = signedIn ? "You are signed in" : view === "sent" ? "Check your email" : "Sign in to save your work";
   const waiting = !signedIn && returning && !acc.ready;
+  const mail = mailProvider(sentTo);
+  const shortcut = !!last && !email.trim();
 
   return (
     <div className="min-h-dvh lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
@@ -207,8 +253,14 @@ export function SignInPage() {
               <p role="status" className="text-ink-2">
                 We sent a sign-in link to <strong className="break-all text-ink">{sentTo}</strong>. Open it on <strong className="text-ink">this device</strong> to finish signing in.
               </p>
+              {mail && (
+                <a href={mail.href} target="_blank" rel="noopener noreferrer" className={primary}>
+                  Open {mail.name}
+                </a>
+              )}
               <ul className="list-disc space-y-1.5 pl-5 text-sm text-ink-2">
-                <li>It can take a minute. Look in your spam or promotions folder too.</li>
+                <li>It can take a minute. Look in Spam or Promotions too. The email comes from TomCredora.</li>
+                <li>When you click the link, this page moves on by itself, even if the link opens in a new tab.</li>
                 <li>The link works once and expires after a short while.</li>
                 <li>Wrong address? Go back and use a different one.</li>
               </ul>
@@ -236,6 +288,33 @@ export function SignInPage() {
           ) : (
             <>
               <p className="mt-3 text-ink-2">Keep your profile and resumes safe and use them on any device. Without an account everything stays in this browser only.</p>
+              <ol aria-label="How signing in works" className="mt-5 grid grid-cols-3 gap-2 text-center text-xs leading-snug text-ink-2">
+                {STEPS.map((s, i) => (
+                  <li key={s} className="rounded-xl border border-line bg-surface px-2 py-3">
+                    <span aria-hidden className="mx-auto mb-1.5 grid size-6 place-items-center rounded-full bg-accent text-xs font-medium text-accent-ink">
+                      {i + 1}
+                    </span>
+                    {s}
+                  </li>
+                ))}
+              </ol>
+              <ul aria-label="Why sign in" className="mt-3 flex flex-wrap gap-2 text-xs text-ink-2 lg:hidden">
+                {PILLS.map((p) => (
+                  <li key={p} className="rounded-full bg-accent-soft px-3 py-1 text-accent">
+                    ✓ {p}
+                  </li>
+                ))}
+              </ul>
+              {shortcut && (
+                <div className="mt-5 rounded-xl border border-line bg-surface p-4">
+                  <p className="text-sm text-ink-2">Welcome back</p>
+                  <p className="break-all font-medium">{last}</p>
+                  <button type="button" onClick={() => submit(undefined, last)} disabled={busy} aria-busy={busy} className={`${primary} mt-3`}>
+                    {busy ? "Sending…" : "Send the link to this address"}
+                  </button>
+                  <p className="mt-3 text-center text-xs text-ink-2">Not you? Type a different address below.</p>
+                </div>
+              )}
               <form onSubmit={submit} noValidate className="mt-6 space-y-3">
                 <label htmlFor={`${uid}-email`} className="block text-sm font-medium">
                   Email address
@@ -267,7 +346,7 @@ export function SignInPage() {
                   </p>
                 ) : (
                   <p id={`${uid}-hint`} className="text-sm text-ink-2">
-                    We will email you a sign-in link. No password.
+                    No password to remember. We email you a one-time link.
                   </p>
                 )}
                 <button type="submit" disabled={busy} aria-busy={busy} className={primary}>
