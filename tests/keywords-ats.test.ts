@@ -53,6 +53,11 @@ describe("coverage + scoring", () => {
     const r = resumeSchema.parse({ ...SAMPLE_RESUME, summary: "react react react react react react" });
     expect(stuffedTerms(r, kws)).toContain("react");
   });
+  it("accepts year-month dates such as 2021-03, the way the date picker stores them", () => {
+    const e = { ...SAMPLE_RESUME.experience[0], start: "2021-03", end: "2023-11" };
+    const rep = scoreResume(resumeSchema.parse({ ...SAMPLE_RESUME, experience: [e] }), kws);
+    expect(rep.checks.find((c) => c.id === "dates")?.pass).toBe(true);
+  });
   it("flags bad date formats", () => {
     const e = { ...SAMPLE_RESUME.experience[0], start: "last spring" };
     const rep = scoreResume(resumeSchema.parse({ ...SAMPLE_RESUME, experience: [e] }), kws);

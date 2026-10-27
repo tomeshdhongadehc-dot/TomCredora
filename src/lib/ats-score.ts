@@ -16,7 +16,7 @@ export interface AtsReport {
   checks: AtsCheck[];
 }
 
-const DATE_RE = /^(?:(?:0?[1-9]|1[0-2])\/\d{4}|[A-Z][a-z]{2,8} \d{4}|\d{4}|Present)$/;
+const DATE_RE = /^(?:(?:0?[1-9]|1[0-2])\/\d{4}|[A-Z][a-z]{2,8} \d{4}|\d{4}-(?:0[1-9]|1[0-2])|\d{4}|Present)$/;
 const FILLER = /\b(responsible for|worked on|various|etc\.?|helped with|results-driven|passionate)\b/i;
 const FIRST_PERSON = /\b(I|my|me)\b/;
 
@@ -48,7 +48,7 @@ export function scoreResume(resume: Resume, keywords: Keyword[]): AtsReport {
       weight: 5,
     },
     { id: "metrics", label: "Most bullets contain a number", pass: bullets.length > 0 && bullets.filter((b) => /\d/.test(b)).length / bullets.length >= 0.5, hint: "Quantify impact (%, $, time, scale) where you truthfully can.", weight: 8 },
-    { id: "dates", label: "Dates use a consistent, parseable format", pass: dates.every((d) => DATE_RE.test(d)), hint: 'Use "Jan 2023" or "01/2023".', weight: 7 },
+    { id: "dates", label: "Dates use a consistent, parseable format", pass: dates.every((d) => DATE_RE.test(d)), hint: 'Use "Jan 2023", "01/2023" or "2023-01".', weight: 7 },
     { id: "filler", label: "No filler or cliche phrases", pass: !bullets.concat(resume.summary).some((b) => FILLER.test(b)), hint: "Remove 'responsible for', 'worked on', 'results-driven'.", weight: 5 },
     { id: "person", label: "No first-person pronouns", pass: !bullets.concat(resume.summary).some((b) => FIRST_PERSON.test(b)), weight: 4 },
     { id: "stuffing", label: "No keyword stuffing", pass: stuffedTerms(resume, keywords).length === 0, hint: "A term appears too often.", weight: 4 },

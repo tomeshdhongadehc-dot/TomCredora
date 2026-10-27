@@ -116,6 +116,7 @@ export function QuickResume() {
             <AccountMenu />
           </nav>
         </header>
+        <main id="main" className="space-y-5">
 
         <div>
           <h1 className="font-display text-3xl">A tailored resume in under a minute</h1>
@@ -243,6 +244,7 @@ export function QuickResume() {
             </p>
           </div>
         )}
+        </main>
       </div>
 
       {/* Print-only copy (real points, @page margins) so "Download PDF" prints just the resume. */}

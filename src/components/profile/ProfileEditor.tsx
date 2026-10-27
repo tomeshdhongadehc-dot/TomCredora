@@ -262,6 +262,7 @@ export function ProfileEditor() {
           <AccountMenu />
         </nav>
       </header>
+      <main id="main" className="space-y-5">
 
       <div>
         <h1 className="font-display text-3xl">Your profile, filled once</h1>
@@ -405,6 +406,7 @@ export function ProfileEditor() {
         )}
         {r.projects.length < 8 && <Button type="button" variant="ghost" onClick={() => setResume((x) => ({ ...x, projects: [...x.projects, { id: newId(), name: "", link: "", tech: [], bullets: [] }] }))}>+ Add a project</Button>}
       </Section>
+      </main>
     </div>
   );
 }

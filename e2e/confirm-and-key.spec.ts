@@ -52,7 +52,7 @@ test.describe("truthfulness: confirming AI-added wording", () => {
     await mockTailor(page);
     await page.getByRole("button", { name: "Tailor with AI" }).click();
     const panel = page.getByRole("region", { name: "Bullets to confirm" });
-    await expect(panel).toContainText("Please confirm these 1 bullet");
+    await expect(panel).toContainText("Please confirm this bullet");
     await expect(panel).toContainText(`AI wrote: ${EMBELLISHED}`);
     await expect(panel).toContainText(`You wrote: ${ORIGINAL}`);
     await expect(panel).toContainText("high-traffic");

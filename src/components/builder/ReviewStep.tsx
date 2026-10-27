@@ -106,7 +106,7 @@ export function ReviewStep({ resume, jd, replaceResume, review, setReview }: Pro
           </p>
           {pending.length > 0 && (
             <div className="mt-4 rounded-xl border border-warn/40 bg-warn-soft/50 p-3" role="region" aria-label="Bullets to confirm">
-              <h4 className="text-sm font-medium text-warn">Please confirm these {pending.length} bullet{pending.length > 1 ? "s" : ""}</h4>
+              <h4 className="text-sm font-medium text-warn">Please confirm {pending.length === 1 ? "this bullet" : `these ${pending.length} bullets`}</h4>
               <p className="text-xs text-ink-2">The AI added wording that is not in what you wrote. Keep it only if it is true.</p>
               <ul className="mt-3 space-y-3">
                 {pending.map((l) => (
@@ -147,7 +147,7 @@ export function ReviewStep({ resume, jd, replaceResume, review, setReview }: Pro
             <div className="flex flex-wrap gap-2" aria-label="Matched keywords">
               {report.coverage.matched.map((k) => (
                 <Chip key={k} tone="good">
-                  ✓ {k}
+                  ✓ {skillDisplay(k)}
                 </Chip>
               ))}
             </div>
@@ -159,11 +159,11 @@ export function ReviewStep({ resume, jd, replaceResume, review, setReview }: Pro
                     isKnownSkill(k) ? (
                       <button key={k} type="button" aria-label={`Add ${skillDisplay(k)} to my skills (I have this)`} onClick={() => replaceResume(addSkill(resume, skillDisplay(k)))}
                         className="inline-flex items-center gap-1 rounded-full bg-warn-soft px-2.5 py-1 text-xs font-medium text-warn transition hover:brightness-95">
-                        + {k}
+                        + {skillDisplay(k)}
                       </button>
                     ) : (
                       <Chip key={k} tone="bad">
-                        {k}
+                        {skillDisplay(k)}
                       </Chip>
                     ),
                   )}

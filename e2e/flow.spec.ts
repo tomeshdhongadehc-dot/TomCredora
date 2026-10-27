@@ -54,8 +54,8 @@ test("profile -> job -> review with live preview, keywords and score", async ({ 
   // The Review step is code-split; allow for a cold dev-server compile under parallel load.
   await expect(page.getByRole("heading", { name: "Your resume vs. this job" })).toBeVisible({ timeout: 20_000 });
   await expect(page.getByRole("img", { name: /ATS score: \d+ out of 100/ })).toBeVisible();
-  await expect(page.getByLabel("Matched keywords")).toContainText("react");
-  await expect(page.getByLabel("Missing keywords")).toContainText("graphql");
+  await expect(page.getByLabel("Matched keywords")).toContainText(/react/i);
+  await expect(page.getByLabel("Missing keywords")).toContainText(/graphql/i);
 });
 
 test("shows a friendly message when AI is not configured", async ({ page }) => {

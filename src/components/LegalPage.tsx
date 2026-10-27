@@ -15,7 +15,7 @@ export function LegalPage({ title, intro, path, children }: { title: string; int
         <Link href="/" className="font-display text-xl">
           {SITE_NAME}
         </Link>
-        <nav aria-label="Legal" className="flex gap-1 text-sm">
+        <nav aria-label="Policy pages" className="flex gap-1 text-sm">
           <Link href="/privacy" className="inline-flex min-h-10 items-center rounded-lg px-3 text-ink-2 hover:bg-surface-2 hover:text-ink">
             Privacy
           </Link>
