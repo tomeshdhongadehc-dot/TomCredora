@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 import { authMode } from "@/lib/auth/client";
-import { signInHref } from "@/lib/auth/next";
+import { signInHref, signUpHref } from "@/lib/auth/next";
 import { useAccount } from "@/lib/sync/use-account";
 
 /** The sync code is downloaded when it is first needed, not with every page. */
@@ -46,16 +46,22 @@ export function AccountMenu({ className = "" }: { className?: string }) {
   // when it appears (that shift once made a click on a neighbouring link miss).
   if (!acc.ready)
     return (
-      <span aria-hidden className={`invisible ${base} ${className}`}>
-        Sign in
+      <span aria-hidden className="invisible inline-flex items-center gap-1">
+        <span className={`${base} ${className}`}>Sign in</span>
+        <span className="hidden min-h-10 items-center whitespace-nowrap px-3 py-1.5 text-sm font-medium sm:inline-flex">Sign up</span>
       </span>
     );
 
   if (!acc.email)
     return (
-      <Link href={signInHref(pathname || "/")} prefetch={false} className={`${base} text-ink-2 hover:text-ink ${className}`}>
-        Sign in
-      </Link>
+      <span className="inline-flex items-center gap-1">
+        <Link href={signInHref(pathname || "/")} prefetch={false} className={`${base} text-ink-2 hover:text-ink ${className}`}>
+          Sign in
+        </Link>
+        <Link href={signUpHref(pathname || "/")} prefetch={false} className="hidden min-h-10 items-center whitespace-nowrap rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-accent-ink transition hover:brightness-110 sm:inline-flex">
+          Sign up
+        </Link>
+      </span>
     );
 
   const close = () => {

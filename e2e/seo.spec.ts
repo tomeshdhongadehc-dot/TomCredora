@@ -7,7 +7,7 @@ import { PUBLIC_PATHS } from "../src/lib/site";
  * address of its own (never the home page), social-card tags, structured data that parses and matches the page,
  * crawl rules, a sitemap that lists real pages, share images, and no dead internal links.
  */
-const TOOL_PAGES = ["/studio", "/build", "/quick", "/profile", "/signin"];
+const TOOL_PAGES = ["/studio", "/build", "/quick", "/profile", "/signin", "/signup"];
 const origin = (page: Page) => new URL(page.url()).origin;
 
 async function meta(page: Page) {
@@ -166,7 +166,7 @@ test.describe("crawler files", () => {
     const t = await r.text();
     expect(t).toMatch(/User-Agent: \*/i);
     expect(t).toMatch(/Allow: \//i);
-    for (const p of ["/api/", "/studio", "/build", "/quick", "/profile", "/signin"]) expect(t, `blocks ${p}`).toContain(`Disallow: ${p}`);
+    for (const p of ["/api/", "/studio", "/build", "/quick", "/profile", "/signin", "/signup"]) expect(t, `blocks ${p}`).toContain(`Disallow: ${p}`);
     expect(t).toMatch(/Sitemap: https?:\/\/[^\s]+\/sitemap\.xml/i);
   });
 

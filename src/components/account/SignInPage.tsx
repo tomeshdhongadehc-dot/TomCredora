@@ -21,6 +21,7 @@ const BENEFITS = [
 ];
 
 const STEPS = ["Enter your email", "Open the email we send", "Click the link. Done"];
+const STEPS_UP = ["Enter your email", "Open the email we send", "Click the link: your account is ready"];
 const PILLS = ["Saved on any device", "Never lose your resumes", "Delete anytime"];
 const LAST_KEY = "arb.signin.last";
 
@@ -50,7 +51,8 @@ function linkProblem(): string | null {
  * The sign-in page. Email link or Google, no password. Built phone-first: one column, 48px controls, 16px text in
  * fields (so iPhones do not zoom), safe-area padding for notches; from 1024px a benefits panel sits beside the form.
  */
-export function SignInPage() {
+export function SignInPage({ intent = "signin" }: { intent?: "signin" | "signup" }) {
+  const up = intent === "signup";
   const router = useRouter();
   const acc = useAccount();
   const uid = useId();
@@ -198,7 +200,7 @@ export function SignInPage() {
     await m.signOut(false);
   }
 
-  const title = signedIn ? "You are signed in" : view === "sent" ? "Check your email" : "Sign in to save your work";
+  const title = signedIn ? "You are signed in" : view === "sent" ? "Check your email" : up ? "Create your free account" : "Sign in to save your work";
   const waiting = !signedIn && returning && !acc.ready;
   const mail = mailProvider(sentTo);
   const shortcut = !!last && !email.trim();
@@ -260,7 +262,7 @@ export function SignInPage() {
               )}
               <ul className="list-disc space-y-1.5 pl-5 text-sm text-ink-2">
                 <li>It can take a minute. Look in Spam or Promotions too. The email comes from TomCredora.</li>
-                <li>When you click the link, this page moves on by itself, even if the link opens in a new tab.</li>
+                <li>{up ? "Click the link to finish creating your account. " : "When you click the link, "}this page moves on by itself, even if the link opens in a new tab.</li>
                 <li>The link works once and expires after a short while.</li>
                 <li>Wrong address? Go back and use a different one.</li>
               </ul>
@@ -287,9 +289,11 @@ export function SignInPage() {
             </div>
           ) : (
             <>
-              <p className="mt-3 text-ink-2">Keep your profile and resumes safe and use them on any device. Without an account everything stays in this browser only.</p>
+              <p className="mt-3 text-ink-2">
+                {up ? "Save your profile and resumes and use them on any device. Free, no password, no card." : "Keep your profile and resumes safe and use them on any device. Without an account everything stays in this browser only."}
+              </p>
               <ol aria-label="How signing in works" className="mt-5 grid grid-cols-3 gap-2 text-center text-xs leading-snug text-ink-2">
-                {STEPS.map((s, i) => (
+                {(up ? STEPS_UP : STEPS).map((s, i) => (
                   <li key={s} className="rounded-xl border border-line bg-surface px-2 py-3">
                     <span aria-hidden className="mx-auto mb-1.5 grid size-6 place-items-center rounded-full bg-accent text-xs font-medium text-accent-ink">
                       {i + 1}
@@ -350,7 +354,7 @@ export function SignInPage() {
                   </p>
                 )}
                 <button type="submit" disabled={busy} aria-busy={busy} className={primary}>
-                  {busy ? "Sending…" : mode === "mock" ? "Sign in" : "Email me a sign-in link"}
+                  {busy ? "Sending…" : mode === "mock" ? (up ? "Create account" : "Sign in") : up ? "Create my account" : "Email me a sign-in link"}
                 </button>
               </form>
 
@@ -369,8 +373,17 @@ export function SignInPage() {
             </>
           )}
 
-          <p className="mt-8 text-xs leading-relaxed text-ink-2">
-            By continuing you agree to the{" "}
+          {!signedIn && !waiting && view === "form" && mode !== "off" && (
+            <p className="mt-6 text-center text-sm text-ink-2">
+              {up ? "Already have an account? " : "New to TomCredora? "}
+              <Link href={`${up ? "/signin" : "/signup"}?next=${encodeURIComponent(next)}`} prefetch={false} className="inline-flex min-h-11 items-center font-medium text-accent underline underline-offset-2">
+                {up ? "Sign in" : "Create a free account"}
+              </Link>
+            </p>
+          )}
+
+          <p className="mt-6 text-xs leading-relaxed text-ink-2">
+            {up ? "By creating an account you agree to the" : "By continuing you agree to the"}{" "}
             <Link href="/terms" prefetch={false} className="underline underline-offset-2 hover:text-ink">
               Terms
             </Link>{" "}

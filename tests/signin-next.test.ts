@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_NEXT, safeNext, signInHref } from "@/lib/auth/next";
+import { DEFAULT_NEXT, safeNext, signInHref, signUpHref } from "@/lib/auth/next";
 
 describe("where to go after signing in (an open redirect would let a stranger's link send you to their site)", () => {
   it("keeps ordinary paths on this site, with query and hash", () => {
@@ -33,12 +33,14 @@ describe("where to go after signing in (an open redirect would let a stranger's 
   });
 
   it("never sends someone back to the sign-in page itself (a loop)", () => {
-    for (const a of ["/signin", "/signin?next=/profile", "/signin/", "/SignIn", "/signin#x"]) expect(safeNext(a), a).toBe(DEFAULT_NEXT);
+    for (const a of ["/signin", "/signin?next=/profile", "/signin/", "/SignIn", "/signin#x", "/signup", "/signup?next=/studio", "/SignUp/"]) expect(safeNext(a), a).toBe(DEFAULT_NEXT);
     expect(safeNext("/signing-guide")).toBe("/signing-guide"); // a different page that merely starts the same way
   });
 
   it("builds the sign-in address for a page, encoded, and re-checked", () => {
     expect(signInHref("/studio")).toBe("/signin?next=%2Fstudio");
+    expect(signUpHref("/studio")).toBe("/signup?next=%2Fstudio");
+    expect(signUpHref("//evil.example")).toBe(`/signup?next=${encodeURIComponent(DEFAULT_NEXT)}`);
     expect(signInHref("/build?step=job")).toBe("/signin?next=%2Fbuild%3Fstep%3Djob");
     expect(signInHref("//evil.example")).toBe(`/signin?next=${encodeURIComponent(DEFAULT_NEXT)}`);
     // round trip
