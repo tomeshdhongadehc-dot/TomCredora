@@ -97,6 +97,22 @@ function mockAuth(): AuthApi {
   };
 }
 
+/** What a failed "send me a link" can tell us about why. */
+export interface SendError {
+  name?: string;
+  status?: number;
+  message?: string;
+}
+
+/** A message that blames the right thing: the service being unreachable, too many requests, or (only then) the address. */
+export function describeSendError(error: SendError): string {
+  const text = `${error.name ?? ""} ${error.message ?? ""}`;
+  if (error.status === 429 || /rate.?limit|too many|over_email_send_rate_limit/i.test(text)) return "Too many sign-in emails were requested. Wait a few minutes and try again.";
+  if (!error.status || error.status >= 500 || /fetch|network|retryable|failed to/i.test(text))
+    return "We cannot reach the sign-in service right now. Your work is safe in this browser. Please try again in a few minutes, or continue without an account.";
+  return "Could not send the link. Check the address and try again.";
+}
+
 // ---------------------------------------------------------------- Supabase
 
 /** Is there a stored session, or are we coming back from an email link / Google? Only then is the library needed. */
@@ -140,8 +156,13 @@ function supabaseAuth(): AuthApi {
     async signInWithEmail(email) {
       const e = email.trim().toLowerCase();
       if (!EMAIL.test(e)) return { ok: false, error: "Enter a valid email address." };
-      const { error } = await (await load()).auth.signInWithOtp({ email: e, options: { emailRedirectTo: returnUrl() } });
-      if (error) return { ok: false, error: "Could not send the link. Check the address and try again." };
+      let error: SendError | null = null;
+      try {
+        ({ error } = await (await load()).auth.signInWithOtp({ email: e, options: { emailRedirectTo: returnUrl() } }));
+      } catch (thrown) {
+        error = thrown as SendError;
+      }
+      if (error) return { ok: false, error: describeSendError(error) };
       return { ok: true, message: `We sent a sign-in link to ${e}. Open it on this device.` };
     },
     async signInWithGoogle() {
