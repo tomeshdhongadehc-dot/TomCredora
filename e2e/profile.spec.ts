@@ -27,7 +27,8 @@ async function tapThrough(page: Page) {
   await page.getByRole("button", { name: "Built and maintained web applications" }).click();
   await page.getByRole("button", { name: "Reviewed code and mentored teammates" }).click();
   await page.getByRole("button", { name: "+ Add education" }).click();
-  await page.getByLabel("Degree").selectOption("B.Tech / B.E.");
+  await page.getByLabel("Degree").click();
+  await page.getByRole("option", { name: "B.Tech / B.E." }).click();
   await page.getByLabel("School or college").fill("COEP");
   await page.getByLabel("From year").selectOption("2018");
   await page.getByLabel("To year").selectOption("2022");

@@ -10,6 +10,8 @@ const nextConfig: NextConfig = {
   // Next.js allows only one dev server per build folder.
   distDir: process.env.NEXT_DIST_DIR || ".next",
   poweredByHeader: false,
+  // Native/worker-based PDF reader: load it from node_modules at runtime instead of bundling it.
+  serverExternalPackages: ["pdf-parse", "@napi-rs/canvas", "pdfjs-dist"],
   async headers() {
     return [
       {

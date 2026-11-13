@@ -133,7 +133,7 @@ test.describe("quick resume", () => {
     await page.getByLabel("Paste the job description").fill(JD);
     await page.getByLabel(/These details are accurate/).check();
     await create(page).click();
-    await expect(page.getByLabel("Your resume", { exact: true }).locator("header.rp-head3")).toBeVisible();
+    await expect(page.getByLabel("Your resume", { exact: true }).locator("header.rp-head3").first()).toBeVisible();
   });
 
   test("an AI error is explained and nothing is lost", async ({ page }) => {

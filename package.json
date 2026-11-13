@@ -26,7 +26,9 @@
     "@upstash/redis": "^1.39.0",
     "docx": "^9.9.0",
     "framer-motion": "^14.0.0",
+    "jszip": "^3.10.2",
     "next": "16.4.0",
+    "pdf-parse": "^2.4.5",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "zod": "^4.6.5"
@@ -43,8 +45,6 @@
     "@vitest/coverage-v8": "^5.0.3",
     "eslint": "^9",
     "eslint-config-next": "16.4.0",
-    "jszip": "^3.10.2",
-    "pdf-parse": "^2.4.5",
     "pixelmatch": "^8.0.0",
     "pngjs": "^7.0.0",
     "tailwindcss": "^4",

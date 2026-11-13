@@ -14,6 +14,10 @@ export interface Profile {
   /** which field-of-work family drives the quick-pick suggestions ("" until chosen) */
   focus: string;
   resume: Resume;
+  /** the full name as typed, kept so the middle name can be hidden on resumes and shown again later */
+  nameFull?: string;
+  /** leave the middle name off the resume's name */
+  hideMiddle?: boolean;
 }
 
 export { looseResume };
@@ -28,7 +32,11 @@ export const emptyProfile = (): Profile => ({ focus: "", resume: looseResume({})
 
 export function parseProfile(raw: unknown): Profile {
   const o = obj(raw);
-  return { focus: str(o.focus, 30), resume: looseResume(o.resume) };
+  const p: Profile = { focus: str(o.focus, 30), resume: looseResume(o.resume) };
+  const nameFull = str(o.nameFull, 80);
+  if (nameFull) p.nameFull = nameFull;
+  if (o.hideMiddle === true) p.hideMiddle = true;
+  return p;
 }
 
 export function loadProfile(s: StorageLike): Profile | null {

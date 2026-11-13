@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { cleanResume, validateResume } from "@/lib/clean";
 import { useDraft } from "@/lib/draft";
 import { hasContent } from "@/lib/draft-model";
+import { MAX_VERSIONS, STATUS_LABEL, guessJobTitle, jdFingerprint, jobName } from "@/lib/job-model";
 import { PAPER_CSS } from "@/lib/paper-css";
 import { completeness, profileFromResume, profileHasContent } from "@/lib/profile";
 import { LIMITS } from "@/lib/schema";
@@ -15,13 +16,18 @@ import { useGeminiKey, useTailor } from "@/lib/tailor-client";
 import { PRESETS, presetById } from "@/lib/templates";
 import { useProfile } from "@/lib/use-profile";
 import { ResumePaper } from "../ResumePaper";
-import { Button, Card, Field, Textarea } from "../ui";
+import { Button, Card, Field, Input, Textarea } from "../ui";
 import { AccountMenu } from "../account/AccountMenu";
 import { SaveNudge } from "../account/SaveNudge";
+import { JobLink } from "./JobLink";
 import { SkillGapPanel } from "./SkillGapPanel";
 
 const skeleton = () => <div role="status" className="h-32 animate-pulse rounded-2xl bg-surface-2" aria-label="Loading" />;
 const DesignStep = dynamic(() => import("../builder/DesignStep").then((m) => m.DesignStep), { loading: skeleton });
+const PageFit = dynamic(() => import("./PageFit").then((m) => m.PageFit));
+const BulletPolish = dynamic(() => import("./BulletPolish").then((m) => m.BulletPolish), { loading: skeleton });
+const CoverLetter = dynamic(() => import("./CoverLetter").then((m) => m.CoverLetter), { loading: skeleton });
+const ImportResume = dynamic(() => import("../profile/ImportResume").then((m) => m.ImportResume), { loading: skeleton });
 const ReviewStep = dynamic(() => import("../builder/ReviewStep").then((m) => m.ReviewStep), { loading: skeleton });
 
 const Step = ({ n, title, children }: { n: number; title: string; children: React.ReactNode }) => (
@@ -40,11 +46,16 @@ const Step = ({ n, title, children }: { n: number; title: string; children: Reac
  * result is saved into the active resume, so the workspace can fine-tune it.
  */
 export function QuickResume() {
-  const { draft, ready, setJd, replaceResume, setTemplate, setReview } = useDraft();
+  const { draft, ready, setJd, replaceResume, setTemplate, setReview, setJob, setVersions, setLetter, workspace } = useDraft();
   const { profile, ready: profileReady, update: updateProfile } = useProfile();
   const [confirmedFor, setConfirmedFor] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [imported, setImported] = useState(false);
+  const [jobTitle, setJobTitle] = useState("");
+  const [jobCompany, setJobCompany] = useState("");
+  const [jobUrl, setJobUrl] = useState("");
   const [seconds, setSeconds] = useState(0);
   const [took, setTook] = useState<number | null>(null);
   const { apiKey, saveKey } = useGeminiKey();
@@ -83,8 +94,33 @@ export function QuickResume() {
     setBusy(false);
     if (!r.ok) return setError(r.message);
     // Skills the user has that the job wants go first, in the job's wording; nothing they lack is added.
-    replaceResume(alignSkillsToJd(r.resume, draft.jd));
+    const jd = draft.jd;
+    const aligned = alignSkillsToJd(r.resume, jd);
+    const title = (jobTitle.trim() || guessJobTitle(jd)).slice(0, 100);
+    const company = jobCompany.trim().slice(0, 100);
+    const fp = jdFingerprint(jd);
+    const earlier = draft.job !== null || draft.review !== null;
+    const sameJob = draft.job !== null && draft.job.fp === fp;
+    const before = { resume: draft.resume, job: draft.job, template: draft.template };
+    if (earlier && !sameJob) {
+      // A different job: keep the earlier resume and make this one its own.
+      if (!workspace.create(jobName({ title, company }), "profile")) {
+        setError("You have 20 saved resumes, which is the limit. Open Applications and delete one you no longer need.");
+        return;
+      }
+      setJd(jd);
+      setTemplate(before.template);
+    } else if (!earlier && /^(?:untitled resume|my resume)/i.test(workspace.activeName) && (title || company)) {
+      workspace.rename(workspace.activeId, jobName({ title, company }));
+    }
+    replaceResume(aligned);
     setReview(() => r.review);
+    // Made again for the same job: the earlier version stays available.
+    if (sameJob) setVersions((v) => [{ at: Date.now(), label: "Earlier version", resume: before.resume }, ...v].slice(0, MAX_VERSIONS));
+    setJob((prev) => {
+      const keep = sameJob && prev ? prev : null;
+      return { title, company, url: jobUrl, status: keep?.status ?? "saved", note: keep?.note ?? "", createdAt: keep?.createdAt ?? Date.now(), appliedAt: keep?.appliedAt ?? null, fp };
+    });
     setTook(Math.round((Date.now() - t0) / 1000));
     requestAnimationFrame(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
   }
@@ -110,9 +146,10 @@ export function QuickResume() {
         <header className="flex flex-wrap items-center gap-3">
           <Link href="/" className="font-display text-lg">TomCredora</Link>
           <span className="rounded-full bg-accent-soft px-3 py-1 text-xs font-medium text-accent">Quick resume</span>
-          <nav aria-label="Other modes" className="ml-auto flex gap-1 text-sm">
+          <nav aria-label="Other modes" className="ml-auto flex flex-wrap gap-1 text-sm">
             <Link href="/profile" className="rounded-lg px-3 py-1.5 text-ink-2 hover:bg-surface-2 hover:text-ink">My profile</Link>
             <Link href="/studio" className="rounded-lg px-3 py-1.5 text-ink-2 hover:bg-surface-2 hover:text-ink">Workspace</Link>
+            <Link href="/jobs" className="rounded-lg px-3 py-1.5 text-ink-2 hover:bg-surface-2 hover:text-ink">Applications</Link>
             <AccountMenu />
           </nav>
         </header>
@@ -130,6 +167,7 @@ export function QuickResume() {
               <p className="text-sm text-ink-2">No profile yet. It takes a couple of minutes, mostly tapping, and you do it once.</p>
               <div className="flex flex-wrap gap-2">
                 <Link href="/profile" className="inline-flex items-center rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-accent-ink shadow-sm hover:brightness-110">Create my profile</Link>
+                <Button variant="ghost" aria-expanded={importing} onClick={() => setImporting((v) => !v)}>Import my resume</Button>
                 <Button variant="ghost" onClick={() => updateProfile(() => profileFromResume(SAMPLE_RESUME, "software"))}>Load example profile</Button>
                 {canAdopt && <Button variant="ghost" onClick={() => updateProfile(() => profileFromResume(draft.resume))}>Use my current resume&apos;s details</Button>}
               </div>
@@ -140,16 +178,58 @@ export function QuickResume() {
                 <strong>{cleaned.contact.fullName || "Unnamed"}</strong>
                 <span className="text-ink-2"> · {cleaned.experience.length} role{cleaned.experience.length === 1 ? "" : "s"} · {cleaned.education.length} education · {skillCount} skills · profile {strength.pct}% complete</span>
               </p>
-              <Link href="/profile" className="inline-flex items-center rounded-lg border border-line bg-surface px-3 py-1.5 text-xs font-medium hover:bg-surface-2">Edit profile</Link>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="ghost" className="px-3 py-1.5 text-xs" aria-expanded={importing} onClick={() => setImporting((v) => !v)}>Import a resume</Button>
+                <Link href="/profile" className="inline-flex items-center rounded-lg border border-line bg-surface px-3 py-1.5 text-xs font-medium hover:bg-surface-2">Edit profile</Link>
+              </div>
+            </div>
+          )}
+          {imported && !importing && (
+            <p role="status" className="mt-3 rounded-lg bg-accent-soft px-3 py-2 text-sm text-accent">
+              Imported. Check the details in <Link href="/profile" className="underline">your profile</Link>, then add the job below.
+            </p>
+          )}
+          {importing && (
+            <div className="mt-4 border-t border-line pt-4">
+              <ImportResume
+                replacing={present}
+                onUse={(resume) => updateProfile((p) => profileFromResume(resume, p.focus))}
+                onDone={() => {
+                  setImporting(false);
+                  setImported(true);
+                }}
+              />
             </div>
           )}
         </Step>
 
         {/* 2 ---- job */}
         <Step n={2} title="Job description">
+          <JobLink
+            onFound={(j) => {
+              setJd(j.text.slice(0, LIMITS.jd));
+              setJobTitle(j.title ? j.title.slice(0, 100) : guessJobTitle(j.text));
+              if (j.company) setJobCompany(j.company);
+              setJobUrl(j.url);
+            }}
+          />
+          <div className="mt-4" />
           <Field label="Paste the job description" htmlFor="quick-jd" hint={`${draft.jd.length.toLocaleString()} / ${LIMITS.jd.toLocaleString()} characters`}>
             <Textarea id="quick-jd" rows={8} value={draft.jd} maxLength={LIMITS.jd} onChange={(e) => setJd(e.target.value)} placeholder="About the role, responsibilities, requirements..." />
           </Field>
+          {draft.job && jdFingerprint(draft.jd) !== draft.job.fp && (
+            <p role="status" className="mt-3 rounded-lg bg-accent-soft px-3 py-2 text-sm text-accent">
+              This is a different job from the resume below. When you press Create it is saved as a new resume, so the earlier one stays.
+            </p>
+          )}
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <Field label="Job title (optional)" htmlFor="quick-job-title" hint="Names the saved resume.">
+              <Input id="quick-job-title" value={jobTitle} maxLength={100} onChange={(e) => setJobTitle(e.target.value)} placeholder={guessJobTitle(draft.jd) || "Senior Frontend Engineer"} className="min-h-11 text-base sm:min-h-0 sm:text-sm" />
+            </Field>
+            <Field label="Company (optional)" htmlFor="quick-job-company" hint="Used in file names and the cover letter.">
+              <Input id="quick-job-company" value={jobCompany} maxLength={100} onChange={(e) => setJobCompany(e.target.value)} placeholder="Acme Corp" className="min-h-11 text-base sm:min-h-0 sm:text-sm" />
+            </Field>
+          </div>
           <SkillGapPanel
             jd={draft.jd}
             resume={profile.resume}
@@ -231,14 +311,81 @@ export function QuickResume() {
                   <ResumePaper resume={draft.resume} config={draft.template} showGuide={false} />
                 </div>
               </div>
+              <PageFit
+                resume={draft.resume}
+                config={draft.template}
+                jd={draft.jd}
+                onApply={(r, c) => {
+                  replaceResume(r);
+                  setTemplate(c);
+                }}
+              />
             </Card>
+            {draft.job && (
+              <div className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-4 sm:flex-row sm:items-center sm:justify-between" aria-label="Saved application">
+                <p className="min-w-0 break-words text-sm" role="status">
+                  Saved to your applications as <strong>{jobName(draft.job)}</strong> <span className="text-ink-2">({STATUS_LABEL[draft.job.status]})</span>.
+                </p>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  {draft.job.status === "saved" && (
+                    <Button variant="ghost" className="min-h-11 w-full sm:w-auto" onClick={() => setJob((j) => (j ? { ...j, status: "applied", appliedAt: j.appliedAt ?? Date.now() } : j))}>Mark as applied</Button>
+                  )}
+                  <Link href="/jobs" className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-line bg-surface px-4 py-2.5 text-sm font-medium hover:bg-surface-2 sm:w-auto">See all applications</Link>
+                </div>
+              </div>
+            )}
             <DesignStep resume={draft.resume} config={draft.template} setConfig={setTemplate} parts={["export"]} />
+            <BulletPolish resume={draft.resume} jd={draft.jd} apiKey={apiKey} onChange={replaceResume} />
+            <CoverLetter resume={printable} jd={draft.jd} company={draft.job?.company || jobCompany} apiKey={apiKey} saved={draft.letter} onSave={setLetter} />
             <details open={draft.review.ledger.some((l) => l.status === "needs-confirmation")} className="rounded-2xl border border-line bg-surface p-5">
               <summary className="cursor-pointer py-2 font-medium">Check the AI’s wording, keywords and ATS score</summary>
               <div className="mt-4">
                 <ReviewStep resume={draft.resume} jd={draft.jd} replaceResume={replaceResume} review={draft.review} setReview={setReview} />
               </div>
             </details>
+            {draft.versions.length > 0 && (
+              <Card>
+                <h2 className="font-display text-xl">Earlier versions</h2>
+                <p className="mt-1 text-sm text-ink-2">Each time you make this resume again for the same job, the one before it is kept here.</p>
+                <ul className="mt-3 space-y-2" aria-label="Earlier versions">
+                  {draft.versions.map((v, i) => (
+                    <li key={`${v.at}-${i}`} className="flex flex-col gap-2 rounded-lg bg-surface-2/60 p-3 sm:flex-row sm:items-center sm:justify-between">
+                      <span className="min-w-0 text-sm">
+                        <strong>{v.label}</strong> <span className="text-ink-2">· {v.at ? new Date(v.at).toLocaleString(undefined, { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) : ""} · {v.resume.experience.reduce((n, e) => n + e.bullets.length, 0)} points</span>
+                      </span>
+                      <Button
+                        variant="ghost"
+                        className="min-h-11 w-full sm:w-auto"
+                        onClick={() => {
+                          const now = { at: Date.now(), label: "Before you restored", resume: draft.resume };
+                          setVersions((list) => [now, ...list.filter((_, j) => j !== i)].slice(0, MAX_VERSIONS));
+                          replaceResume(v.resume);
+                        }}
+                      >
+                        Restore this version
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+            )}
+            <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
+              <Button
+                variant="ghost"
+                className="min-h-11 w-full sm:w-auto"
+                onClick={() => {
+                  if (workspace.create("New job", "profile")) {
+                    setJobTitle("");
+                    setJobCompany("");
+                    setJobUrl("");
+                    setTook(null);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  } else setError("You have 20 saved resumes, which is the limit. Open Applications and delete one you no longer need.");
+                }}
+              >
+                Start another job
+              </Button>
+            </div>
             <p className="text-center text-sm text-ink-2">
               Want to fine-tune it? <Link href="/studio" className="text-accent underline-offset-4 hover:underline">Open it in the workspace</Link>.
             </p>

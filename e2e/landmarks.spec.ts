@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 /** "Skip to content" jumps to #main; a page without it leaves keyboard and screen-reader users with a dead link. */
-const PAGES = ["/", "/build", "/quick", "/studio", "/profile", "/signin", "/signup", "/ats-resume-templates", "/guides/ats-friendly-resume", "/privacy", "/terms", "/nope-404"];
+const PAGES = ["/", "/build", "/quick", "/studio", "/profile", "/jobs", "/signin", "/signup", "/ats-resume-templates", "/guides/ats-friendly-resume", "/privacy", "/terms", "/nope-404"];
 
 for (const path of PAGES) {
   test(`${path} has one main landmark that the skip link reaches`, async ({ page }) => {

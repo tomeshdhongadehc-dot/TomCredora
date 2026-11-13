@@ -100,6 +100,9 @@ export function Studio() {
           <Link href="/quick" className="hidden rounded-lg px-2 py-1.5 text-sm text-ink-2 hover:bg-surface-2 hover:text-ink sm:block sm:px-3">
             Quick resume
           </Link>
+          <Link href="/jobs" className="hidden rounded-lg px-2 py-1.5 text-sm text-ink-2 hover:bg-surface-2 hover:text-ink sm:block sm:px-3">
+            Applications
+          </Link>
           <Link href="/build" className="ml-auto rounded-lg px-2 py-1.5 text-sm text-ink-2 hover:bg-surface-2 hover:text-ink sm:ml-0 sm:px-3">
             Guided mode
           </Link>

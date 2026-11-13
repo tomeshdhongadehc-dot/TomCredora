@@ -30,7 +30,7 @@ describe("REGRESSION: unfinished work survives a reload (it used to be replaced 
 
   it("saving then loading from storage returns the same unfinished resume", () => {
     const s = memory();
-    saveDraft(s, "r-abcd1234", { resume: unfinished(), jd: "", template: parseDraft({}).template, review: null });
+    saveDraft(s, "r-abcd1234", { resume: unfinished(), jd: "", template: parseDraft({}).template, review: null, job: null, versions: [], letter: "" });
     const back = loadDraft(s, "r-abcd1234")!;
     expect(back.resume).toEqual(unfinished());
   });

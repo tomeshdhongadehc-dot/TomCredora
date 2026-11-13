@@ -6,9 +6,10 @@ import { chromium } from "@playwright/test";
 const PORT = 3300;
 const BASE = `http://localhost:${PORT}`;
 // 2026-10-12 (landing later tightened to 150: it no longer prefetches other pages, so a phone downloads only what the page uses).
+// 2026-11-11: /build 270 -> 285 KB: every page that loads a saved resume now also parses its job details, earlier versions and cover letter (shared code, about 8 KB).
 // The builder total went from 260 to 270 KB when the builder gained per-step addresses (Back/Forward
 // between steps) and saved half-typed text, both requested features (~5 KB). "JS before load" budgets are unchanged.
-const BUDGET = { criticalKB: { "/": 150, "/build": 200, "/studio": 300, "/quick": 300 }, jsKB: { "/": 150, "/build": 270, "/studio": 420, "/quick": 420 }, lcpMs: 2000, cls: 0.1, lazyExtraKB: 100 };
+const BUDGET = { criticalKB: { "/": 150, "/build": 200, "/studio": 300, "/quick": 300 }, jsKB: { "/": 150, "/build": 285, "/studio": 420, "/quick": 420 }, lcpMs: 2000, cls: 0.1, lazyExtraKB: 100 };
 const kb = (n) => Math.round(n / 102.4) / 10;
 
 if (!process.env.SKIP_BUILD) {

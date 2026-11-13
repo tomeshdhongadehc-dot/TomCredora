@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cloneDraft, addResume, exampleDraft, exportBundle, loadDraft, loadWorkspace, parseImport, removeResume, renameResume, saveDraft, saveIndex, touchResume, dataKey, type ImportResult, type ResumeMeta, type StorageLike, type WorkspaceIndex } from "./workspace";
 import { emptyDraft, hasContent, type Draft } from "./draft-model";
+import type { JobInfo, ResumeVersion } from "./job-model";
 import { loadProfile, profileHasContent, seededKey, seedFromProfile } from "./profile";
 import { notifyLocalChange, onSynced, registerFlush } from "./sync/bus";
 import { recordRemoval } from "./sync/removed";
@@ -160,6 +161,9 @@ export function useDraft() {
   const setTemplate = useCallback((template: TemplateConfig) => edit((d) => ({ ...d, template }), true), [edit]);
   const setJd = useCallback((jd: string) => edit((d) => ({ ...d, jd }), false), [edit]);
   const setReview = useCallback((fn: (r: ReviewState | null) => ReviewState | null) => edit((d) => ({ ...d, review: fn(d.review) }), false), [edit]);
+  const setJob = useCallback((fn: (j: JobInfo | null) => JobInfo | null) => edit((d) => ({ ...d, job: fn(d.job) }), false), [edit]);
+  const setLetter = useCallback((letter: string) => edit((d) => ({ ...d, letter }), false), [edit]);
+  const setVersions = useCallback((fn: (v: ResumeVersion[]) => ResumeVersion[]) => edit((d) => ({ ...d, versions: fn(d.versions) }), false), [edit]);
   const reset = useCallback(() => edit(() => emptyDraft(), true), [edit]);
 
   const undo = useCallback(() => {
@@ -317,6 +321,9 @@ export function useDraft() {
     replaceResume,
     setTemplate,
     setReview,
+    setJob,
+    setVersions,
+    setLetter,
     reset,
     history: { undo, redo, canUndo: canHistory.undo, canRedo: canHistory.redo },
     workspace: { resumes, activeId: index.activeId, activeName, switchTo, create, profileAvailable, duplicate, rename, remove, importText, exportText },

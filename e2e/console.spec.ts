@@ -97,8 +97,11 @@ test("profile and quick pages log nothing while a profile is built and used", as
   await page.getByLabel("I work here now").last().check();
   await page.getByLabel("I work here now").last().uncheck();
   await page.getByRole("button", { name: "+ Add education" }).click();
-  await page.getByLabel("Degree", { exact: true }).last().selectOption("__other");
-  await page.getByLabel("Degree", { exact: true }).last().selectOption("MBA");
+  await page.getByLabel("Degree", { exact: true }).last().click();
+  await page.getByRole("option", { name: "MBA", exact: true }).click();
+  await page.getByLabel("City, country").fill("pu");
+  await page.getByRole("listbox", { name: "Places" }).getByRole("option").first().click();
+  await page.getByLabel("Phone").fill("98765 43210");
   await page.getByRole("button", { name: "+ Add a project" }).click();
   await page.goto("/quick");
   await page.getByLabel(/These details are accurate/).check();

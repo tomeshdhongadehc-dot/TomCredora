@@ -54,3 +54,10 @@ next-env.d.ts
 /playwright-report/
 *.log
 !.env.example
+
+# secrets and credentials, never commit
+[Ss]ecret*.txt
+[Ss]ecret*.txt.txt
+secrets/
+*.pem
+*.key
