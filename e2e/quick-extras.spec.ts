@@ -333,7 +333,7 @@ test.describe("the cover letter", () => {
 
   test("is written without contact details, then gets the real name and contact, and can be saved", async ({ page }) => {
     await ready(page);
-    let sent: Record<string, any> = {};
+    let sent: { tone?: string; company?: string; profile?: { contact?: unknown } } = {};
     await page.route("**/api/v1/cover-letter", async (route) => {
       sent = JSON.parse(route.request().postData() ?? "{}");
       await route.fulfill({ json: { paragraphs: PARAS, warnings: ['The number "73%" is not in your profile.'] } });
@@ -350,7 +350,7 @@ test.describe("the cover letter", () => {
     // what the AI was sent
     expect(sent.tone).toBe("warm");
     expect(sent.company).toBe("Acme Corp");
-    expect(sent.profile.contact).toMatchObject({ fullName: "Candidate", email: "candidate@example.com" });
+    expect(sent.profile?.contact).toMatchObject({ fullName: "Candidate", email: "candidate@example.com" });
     expect(JSON.stringify(sent)).not.toContain("asha.rao@example.com");
     expect(JSON.stringify(sent)).not.toContain("Asha Rao");
     await expect(page.getByRole("note", { name: "Facts to check" })).toContainText("73%");

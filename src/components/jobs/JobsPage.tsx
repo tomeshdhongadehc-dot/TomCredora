@@ -33,6 +33,7 @@ export function JobsPage() {
 
   const reload = useCallback(() => setRows(listJobs(getStorage())), []);
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time read of storage after mount (it is not available on the server)
     reload();
     const off = onSynced(reload);
     window.addEventListener("storage", reload);

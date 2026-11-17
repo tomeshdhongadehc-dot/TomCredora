@@ -14,6 +14,7 @@ export function useProfile() {
   const [profile, setProfileState] = useState<Profile>(emptyProfile);
   const [ready, setReady] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [savedAt, setSavedAt] = useState<number | null>(null);
   const ref = useRef(profile);
   const storage = useRef<StorageLike | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -25,6 +26,7 @@ export function useProfile() {
     dirty.current = false;
     saveProfile(storage.current, ref.current);
     setSaved(true);
+    setSavedAt(Date.now());
     notifyLocalChange();
   }, []);
 
@@ -34,6 +36,7 @@ export function useProfile() {
     if (loaded) {
       ref.current = loaded;
       setProfileState(loaded);
+      setSaved(true); // what was just read from storage is, by definition, already saved
     }
     setReady(true);
     const unregisterFlush = registerFlush(flush);
@@ -76,5 +79,15 @@ export function useProfile() {
     [flush],
   );
 
-  return { profile, ready, saved, update };
+  /** Save right now (the "Save now" button); a pending change is written at once instead of after the short delay. */
+  const saveNow = useCallback(() => {
+    if (dirty.current) flush();
+    else {
+      setSaved(true);
+      setSavedAt(Date.now());
+      notifyLocalChange(); // signed in: also ask for a sync now
+    }
+  }, [flush]);
+
+  return { profile, ready, saved, savedAt, saveNow, update };
 }

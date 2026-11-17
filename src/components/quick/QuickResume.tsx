@@ -142,7 +142,7 @@ export function QuickResume() {
   return (
     <>
       <style>{PAPER_CSS}</style>
-      <div className="screen-only mx-auto max-w-3xl space-y-5 px-4 py-6 sm:py-10">
+      <div className="screen-only mx-auto w-full max-w-3xl space-y-5 px-4 py-6 sm:py-10">
         <header className="flex flex-wrap items-center gap-3">
           <Link href="/" className="font-display text-lg">TomCredora</Link>
           <span className="rounded-full bg-accent-soft px-3 py-1 text-xs font-medium text-accent">Quick resume</span>
@@ -334,8 +334,14 @@ export function QuickResume() {
                 </div>
               </div>
             )}
-            <DesignStep resume={draft.resume} config={draft.template} setConfig={setTemplate} parts={["export"]} />
             <BulletPolish resume={draft.resume} jd={draft.jd} apiKey={apiKey} onChange={replaceResume} />
+            <details className="rounded-2xl border border-line bg-surface p-5">
+              <summary className="cursor-pointer py-2 font-medium">Arrange sections and change the look</summary>
+              <div className="mt-4">
+                <DesignStep resume={draft.resume} config={draft.template} setConfig={setTemplate} parts={["style"]} />
+              </div>
+            </details>
+            <DesignStep resume={draft.resume} config={draft.template} setConfig={setTemplate} parts={["export"]} />
             <CoverLetter resume={printable} jd={draft.jd} company={draft.job?.company || jobCompany} apiKey={apiKey} saved={draft.letter} onSave={setLetter} />
             <details open={draft.review.ledger.some((l) => l.status === "needs-confirmation")} className="rounded-2xl border border-line bg-surface p-5">
               <summary className="cursor-pointer py-2 font-medium">Check the AI’s wording, keywords and ATS score</summary>

@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { ZodType } from "zod";
-import { bulletRequestSchema, coverRequestSchema, polishBullet, writeCover, type BulletResult, type CoverResult } from "@/lib/ai/polish";
+import { bulletRequestSchema, coverRequestSchema, polishBullet, rewriteRequestSchema, rewriteText, writeCover, type BulletResult, type CoverResult } from "@/lib/ai/polish";
 import { ProviderError, SchemaError, type LLMProvider } from "@/lib/ai/provider";
 import { ApiError, errorResponse } from "./errors";
 import { assertSameOrigin, clientIp, readJson } from "./guard";
@@ -69,6 +69,17 @@ export const handleBullet = (req: Request, deps: PolishDeps): Promise<Response> 
     schema: bulletRequestSchema,
     timeoutMs: 20_000,
     run: (provider, request, signal) => polishBullet({ provider, request, signal }),
+  });
+
+export const handleRewrite = (req: Request, deps: PolishDeps): Promise<Response> =>
+  handle<ReturnType<typeof rewriteRequestSchema.parse>, BulletResult>(req, deps, {
+    name: "rewrite",
+    perMin: envInt("REWRITE_RATE_PER_MIN", 15),
+    perDay: envInt("REWRITE_RATE_PER_DAY", 150),
+    maxBody: 16 * 1024,
+    schema: rewriteRequestSchema,
+    timeoutMs: 25_000,
+    run: (provider, request, signal) => rewriteText({ provider, request, signal }),
   });
 
 export const handleCover = (req: Request, deps: PolishDeps): Promise<Response> =>

@@ -21,9 +21,15 @@ import { SaveNudge } from "../account/SaveNudge";
 import { Button, Card } from "../ui";
 import { Combobox } from "./Combobox";
 import { CityField, PhoneField } from "./ProfileFields";
+import { SaveBar } from "./SaveBar";
 
 const ImportResume = dynamic(() => import("./ImportResume").then((m) => m.ImportResume), {
   loading: () => <div role="status" className="h-32 animate-pulse rounded-2xl bg-surface-2" aria-label="Loading" />,
+});
+
+// The preview (and every template it can draw) is downloaded only when someone opens it.
+const ProfilePreview = dynamic(() => import("./ProfilePreview"), {
+  loading: () => <div role="status" className="h-64 animate-pulse rounded-2xl bg-surface-2" aria-label="Loading preview" />,
 });
 
 type Exp = Resume["experience"][number];
@@ -297,7 +303,8 @@ function EduCard({ e, onChange, onRemove, n }: { e: Edu; onChange: (e: Edu) => v
  * from it and the AI sharpens a copy per job, so this stays exactly as you wrote it.
  */
 export function ProfileEditor() {
-  const { profile, ready, saved, update } = useProfile();
+  const { profile, ready, saved, saveNow, update } = useProfile();
+  const [previewOpen, setPreviewOpen] = useState(false);
   const r = profile.resume;
   const family = familyById(profile.focus);
   const score = useMemo(() => completeness(profile), [profile]);
@@ -373,7 +380,6 @@ export function ProfileEditor() {
       <Card>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="font-medium">Profile strength <span className="tabular-nums" data-testid="strength">{score.pct}%</span></p>
-          <span role="status" className="text-xs text-ink-2">{saved ? "Saved in this browser" : profileHasContent(profile) ? "Saving…" : "Saved in this browser as you go"}</span>
         </div>
         <div role="progressbar" aria-label="Profile strength" aria-valuemin={0} aria-valuemax={100} aria-valuenow={score.pct} className="mt-3 h-2 overflow-hidden rounded-full bg-surface-2">
           <div className="h-full rounded-full bg-accent transition-[width] duration-[var(--dur)]" style={{ width: `${score.pct}%` }} />
@@ -556,7 +562,19 @@ export function ProfileEditor() {
         )}
         {r.projects.length < 8 && <Button type="button" variant="ghost" onClick={() => setResume((x) => ({ ...x, projects: [...x.projects, { id: newId(), name: "", link: "", tech: [], bullets: [] }] }))}>+ Add a project</Button>}
       </Section>
+
+      <Section title="Preview" hint="See your details as a resume. Pick a template to try it.">
+        <Button type="button" variant="ghost" aria-expanded={previewOpen} aria-controls="profile-preview" onClick={() => setPreviewOpen((v) => !v)}>
+          {previewOpen ? "Hide preview" : "Show my resume preview"}
+        </Button>
+        {previewOpen && (
+          <div id="profile-preview">
+            <ProfilePreview resume={r} />
+          </div>
+        )}
+      </Section>
       </main>
+      <SaveBar saved={saved} hasContent={profileHasContent(profile)} saveNow={saveNow} />
     </div>
   );
 }

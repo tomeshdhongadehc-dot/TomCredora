@@ -63,7 +63,6 @@ export function PageFit({ resume, config, jd, onApply }: { resume: Resume; confi
     const w = article.clientWidth;
     const { pages } = pagesFor(h, w, view.config);
     if (!run) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- the measurement can only be taken after the page is laid out
       const next = { pages, over: linesOver(h, w, view.config, 1) };
       setInfo((cur) => same(cur, next));
       return;

@@ -35,7 +35,8 @@ export async function syncNow(): Promise<void> {
       return;
     }
     set({ email: session.email, phase: "syncing" });
-    const r = await syncOnce({ storage: getStorage(), fetch: (u, i) => fetch(u, i), token: () => session.token, flush: flushAll });
+    // a slow or stuck connection gives up after 20s (and shows "offline") instead of hanging on "Syncing…"
+    const r = await syncOnce({ storage: getStorage(), fetch: (u, i) => fetch(u, { ...i, signal: AbortSignal.timeout(20_000) }), token: () => session.token, flush: flushAll });
     lastRun = Date.now();
     switch (r.state) {
       case "synced":
